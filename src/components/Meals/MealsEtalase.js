@@ -1,38 +1,65 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import classes from './MealsEtalase.module.css';
 import Card from "../UI/Card";
 import MealProduct from "./MealsProduct,.js/MealProduct";
 
 const MealsEtalase = () => {
-    const DUMMY_MEALS = [
-        {
-            id: 'm1',
-            name: 'Ketoprak Aduk',
-            description: 'Di aduk aduk ampe pusing',
-            price: 40,
-        },
-        {
-            id: 'm2',
-            name: 'Baso Malang',
-            description: 'Khas Madura',
-            price: 30,
-        },
-        {
-            id: 'm3',
-            name: 'Soto kaki kambing sebelah kiri',
-            description: 'sebelah kanan lagi di cari',
-            price: 50,
-        },
-        {
-            id: 'm4',
-            name: 'Sop buntut ayam',
-            description: 'gada buntut, adanya leher',
-            price: 25,
-        },
-    ];
+    const [meals, setMeals] = useState([])
+    const [isLoading, setIsLoading] = useState(true)
+    const [httpError, sethttpError] = useState(null)
 
-    const mealsList = DUMMY_MEALS.map((meal) =>
+
+    useEffect(() => {
+        const fetchMeals = async () => {
+            
+            const response = await fetch('https://food-app-61d90-default-rtdb.firebaseio.com/meals.json')
+            
+            if (!response.ok) {
+                throw new Error('Something went wrong !!!')
+            }
+            
+            
+            const responseData = await response.json()
+
+
+            const loadedMeals = [] // BENTUK DATA DI FIREBASE ARRAY
+            for (const key in responseData) {
+                loadedMeals.push({
+                    id: key,
+                    name: responseData[key].name,
+                    description: responseData[key].description,
+                    price: responseData[key].price
+                })
+            }
+            setMeals(loadedMeals)
+            setIsLoading(false)
+        }
+        fetchMeals().catch(error => {
+            setIsLoading(false)
+            sethttpError(error.message)
+        });
+    }, [])
+
+    if ( isLoading ) {
+        return (
+            <section className={classes.loading}>
+                <h3>Loading ...</h3>
+            </section>
+        )
+    }
+
+    if ( httpError) {
+        return (
+            <section className={classes.httpError}>
+                <h3>{httpError}</h3>
+            </section>
+        )
+    }
+
+
+
+    const mealsList = meals.map((meal) =>
         <MealProduct
             id={meal.id}
             key={meal.id}
